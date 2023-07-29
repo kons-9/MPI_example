@@ -1,0 +1,4 @@
+CompileFlags:
+  Add: [-I/opt/FJSVxtclanga/.common/MELI029/include/mpi/fujitsu]
+  Compiler: mpifccpx
+
