@@ -1,0 +1,5 @@
+*.err
+*.out
+*.bash
+!template.bash
+!make_bash.bash
