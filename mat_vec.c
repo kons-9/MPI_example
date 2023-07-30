@@ -4,7 +4,7 @@
 
 #include <mpi.h>
 
-#define N 1152
+#define N 9216
 // #PJM --mpi proc=576
 // #define N 15
 #define DEBUG 1
@@ -80,14 +80,15 @@ int main(int argc, char *argv[]) {
   ierr = MPI_Reduce(&t0, &t_w, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
 
   if (myid == 0) {
+    printf("Nprocs = %d \n", numprocs);
     printf("N  = %d \n", N);
-    printf("Mat-Mat time  = %lf [sec.] \n", t_w);
+    printf("Mat-Vec time  = %lf [sec.] \n", t_w);
 
     double d_mflops = 2.0 * (double)N * (double)N / t_w;
     d_mflops = d_mflops * 1.0e-6;
     printf(" %lf [MFLOPS] \n", d_mflops);
   }
-  if (DEBUG == 1) {
+  if (DEBUG == 1 && myid == 0) {
     for (i = 0; i < n_local; i++) {
       if (fabs(y_local[i] - N) > EPS) {
         printf("Error: y[%d] = %lf \n", i, y_local[i]);
@@ -95,7 +96,7 @@ int main(int argc, char *argv[]) {
         exit(0);
       }
     }
-    printf("OK! \n");
+    // printf("OK! \n");
   }
 
   rc = MPI_Finalize();

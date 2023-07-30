@@ -4,7 +4,7 @@
 
 #include <mpi.h>
 
-#define N 1152
+#define N 256
 // #PJM --mpi proc=576
 // #define N 15
 #define DEBUG 1
@@ -91,11 +91,7 @@ int main(int argc, char *argv[]) {
 
   if (myid == 0) {
     printf("N  = %d \n", N);
-    printf("Mat-Mat time  = %lf [sec.] \n", t_w);
-
-    double d_mflops = 2.0 * (double)N * (double)N / t_w;
-    d_mflops = d_mflops * 1.0e-6;
-    printf(" %lf [MFLOPS] \n", d_mflops);
+    printf("Transpose-Mat time  = %lf [sec.] \n", t_w);
   }
 
   if (DEBUG && myid == 0) {

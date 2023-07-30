@@ -5,7 +5,7 @@
 #include <mpi.h>
 
 #define DEBUG 0
-#define N 576 * 2
+#define N 576 * 10
 #define MAX_ITER 100
 #define EPS 1e-16
 
@@ -48,6 +48,7 @@ int main(int argc, char *argv[]) {
   srand(1);
   dc_inv = 1.0 / (double)RAND_MAX;
 
+  // if (myid == 0) {
   for (j = 0; j < N; j++) {
     x[j] = rand() * dc_inv;
   }
@@ -57,6 +58,9 @@ int main(int argc, char *argv[]) {
       A[i][j] = A[j][i];
     }
   }
+  // }
+  // MPI_Bcast(&A[0][0], N * N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  // MPI_Bcast(x, N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
   // printf("A matrix\n");
   // print_matrix(&A[0][0], N, N);
@@ -86,6 +90,7 @@ int main(int argc, char *argv[]) {
   d_residual = sqrt(d_residual);
 
   if (myid == 0) {
+    printf("Procs = %d \n", numprocs);
     printf("N  = %d \n", N);
     printf("Power Method time  = %lf [sec.] \n", t_w);
 
@@ -135,7 +140,7 @@ double PowM(int n, int n_local, int *n_iter) {
   MPI_Allreduce(&d_tmp1, &d_tmp1, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   d_tmp1 = 1.0 / sqrt(d_tmp1);
   for (i = start; i < end; i++) {
-    x[i] *= d_tmp1;
+    x[i] = x[i] * d_tmp1;
   }
 
   /* Main iteration loop ---------------------- */

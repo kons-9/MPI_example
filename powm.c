@@ -5,7 +5,7 @@
 #include <mpi.h>
 
 #define DEBUG 0
-#define N 576 * 2
+#define N 576 * 10
 #define MAX_ITER 100
 #define EPS 1e-16
 
@@ -100,6 +100,7 @@ int main(int argc, char *argv[]) {
   d_residual = sqrt(d_residual);
 
   if (myid == 0) {
+    printf("Nprocs = %d \n", numprocs);
     printf("N  = %d \n", N);
     printf("Power Method time  = %lf [sec.] \n", t_w);
 

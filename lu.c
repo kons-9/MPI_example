@@ -112,7 +112,6 @@ int main(int argc, char *argv[]) {
   dtemp_t = 0.0;
   for (j = myid * ib; j < (myid + 1) * ib; j++) {
     dtemp2 = x[j] - 1.0;
-    printf("%lf\n", x[j]);
     dtemp_t += dtemp2 * dtemp2;
   }
   dtemp_t = sqrt(dtemp_t);
@@ -255,12 +254,5 @@ void MyLUsolve(double A[N][N], double b[N], double *x, int n) {
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Gather(&x[istart], ib, MPI_DOUBLE, &x[0], ib, MPI_DOUBLE, 0,
              MPI_COMM_WORLD);
-  if (myid == 0) {
-    printf("x \n");
-    for (int i = 0; i < n; i++) {
-      printf("%lf ", x[i]);
-    }
-    printf("\n");
-  }
   /* --------------------------------------- */
 }

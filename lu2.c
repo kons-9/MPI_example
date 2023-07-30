@@ -4,7 +4,7 @@
 
 #include <mpi.h>
 
-#define N 128
+#define N 576 * 4
 
 #define MATRIX 1
 
@@ -112,7 +112,6 @@ int main(int argc, char *argv[]) {
   dtemp_t = 0.0;
   for (j = myid * ib; j < (myid + 1) * ib; j++) {
     dtemp2 = x[j] - 1.0;
-    printf("%lf\n", x[j]);
     dtemp_t += dtemp2 * dtemp2;
   }
   dtemp_t = sqrt(dtemp_t);
@@ -148,7 +147,7 @@ void MyLUsolve(double *localA, double *b, double *x, int n) {
   // b: (n, 1)
   // x: (n, 1)
   // n: matrix size
-  
+
   int ib = n / numprocs;
   const int istart = myid * ib;
   const int iend = (myid + 1) * ib;
@@ -260,12 +259,12 @@ void MyLUsolve(double *localA, double *b, double *x, int n) {
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Gather(&x[istart], ib, MPI_DOUBLE, &x[0], ib, MPI_DOUBLE, 0,
              MPI_COMM_WORLD);
-  if (myid == 0) {
-    printf("x \n");
-    for (int i = 0; i < n; i++) {
-      printf("%lf ", x[i]);
-    }
-    printf("\n");
-  }
+  // if (myid == 0) {
+  //   printf("x \n");
+  //   for (int i = 0; i < n; i++) {
+  //     printf("%lf ", x[i]);
+  //   }
+  //   printf("\n");
+  // }
   /* --------------------------------------- */
 }

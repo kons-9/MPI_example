@@ -4,7 +4,7 @@
 
 #include <mpi.h>
 
-#define N 2400
+#define N 576 
 #define DEBUG 1
 #define EPS 1.0e-18
 
@@ -33,37 +33,9 @@ void calculate_local_matmal(double *A, double *B, double *C, int Nl) {
   }
 }
 
-void solve(double A[N][N], double B[N][N], double C[N][N], int Nl,
+void solve(double *localA, double *localB, double *localC, int Nl,
            int root_numproc, MPI_Comm cannon_comm) {
-
   int i, j;
-
-  double *localA = (double *)malloc(Nl * Nl * sizeof(double));
-  double *localB = (double *)malloc(Nl * Nl * sizeof(double));
-  double *localC = (double *)calloc(Nl * Nl, sizeof(double));
-
-  MPI_Datatype my_mat_type, type;
-  MPI_Type_vector(Nl, Nl, N, MPI_DOUBLE, &type);
-  MPI_Type_create_resized(type, 0, Nl * sizeof(double), &my_mat_type);
-  MPI_Type_commit(&my_mat_type);
-
-  int *sendcounts = (int *)malloc(numprocs * sizeof(int));
-  int *displs = (int *)malloc(numprocs * sizeof(int));
-
-  int disp = 0;
-  for (i = 0; i < root_numproc; i++) {
-    for (j = 0; j < root_numproc; j++) {
-      sendcounts[i * root_numproc + j] = 1;
-      displs[i * root_numproc + j] = disp;
-      disp += 1;
-    }
-    disp += (Nl - 1) * root_numproc;
-  }
-
-  MPI_Scatterv(&A[0][0], sendcounts, displs, my_mat_type, localA, Nl * Nl,
-               MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  MPI_Scatterv(&B[0][0], sendcounts, displs, my_mat_type, localB, Nl * Nl,
-               MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
   // skewing
   int coord[2];
@@ -91,8 +63,6 @@ void solve(double A[N][N], double B[N][N], double C[N][N], int Nl,
   }
   calculate_local_matmal(localA, localB, localC, Nl);
 
-  MPI_Gatherv(localC, Nl * Nl, MPI_DOUBLE, &C[0][0], sendcounts, displs,
-              my_mat_type, 0, MPI_COMM_WORLD);
   return;
 }
 
@@ -138,15 +108,44 @@ int main(int argc, char *argv[]) {
       initialize_matrix(B, N);
     }
   }
+  int root_numproc = sqrt(numprocs);
+  double *localA = (double *)malloc(Nl * Nl * sizeof(double));
+  double *localB = (double *)malloc(Nl * Nl * sizeof(double));
+  double *localC = (double *)calloc(Nl * Nl, sizeof(double));
+
+  MPI_Datatype my_mat_type, type;
+  MPI_Type_vector(Nl, Nl, N, MPI_DOUBLE, &type);
+  MPI_Type_create_resized(type, 0, Nl * sizeof(double), &my_mat_type);
+  MPI_Type_commit(&my_mat_type);
+
+  int *sendcounts = (int *)malloc(numprocs * sizeof(int));
+  int *displs = (int *)malloc(numprocs * sizeof(int));
+
+  int disp = 0;
+  for (i = 0; i < root_numproc; i++) {
+    for (j = 0; j < root_numproc; j++) {
+      sendcounts[i * root_numproc + j] = 1;
+      displs[i * root_numproc + j] = disp;
+      disp += 1;
+    }
+    disp += (Nl - 1) * root_numproc;
+  }
+
+  MPI_Scatterv(&A[0][0], sendcounts, displs, my_mat_type, localA, Nl * Nl,
+               MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Scatterv(&B[0][0], sendcounts, displs, my_mat_type, localB, Nl * Nl,
+               MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
   ierr = MPI_Barrier(cannon_comm);
   t1 = MPI_Wtime();
 
-  solve(A, B, C, Nl, root_numprocs, cannon_comm);
+  solve(localA, localB, localC, Nl, root_numprocs, cannon_comm);
 
   t2 = MPI_Wtime();
   t0 = t2 - t1;
   ierr = MPI_Reduce(&t0, &t_w, 1, MPI_DOUBLE, MPI_MAX, 0, cannon_comm);
+  MPI_Gatherv(localC, Nl * Nl, MPI_DOUBLE, &C[0][0], sendcounts, displs,
+              my_mat_type, 0, MPI_COMM_WORLD);
 
   if (myid == 0) {
     printf("N  = %d \n", N);
